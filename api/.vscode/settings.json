@@ -1,0 +1,10 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintArgs": [
+        "--load-plugins",
+        "pylint_django"
+    ],
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "autopep8",
+}

@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  db:
+    build: ./db
+    image: db:latest
+    volumes:
+      - ./db/init_db.sh:/docker-entrypoint-initdb.d/init_db.sh:ro
+      - ./db/data:/var/lib/postgresql/data
+      - ./db/postgresql.conf:/var/lib/postgresql/postgresql.conf:ro
+      - ./db/pg_hba.conf:/pg_hba.conf:ro
+
+    ports:
+      - 5432:5432
+
+    env_file:
+      - ./.env
+
+  api:
+    build: ./api
+    depends_on:
+      - db
+    entrypoint: "./wait-for-service.sh db:5432"
+    command: ["--strict", "--", "./run.sh"]
+    volumes:
+      - ./api/src:/src
+      - ./utils/wait-for-service.sh:/wait-for-service.sh
+      - ./api/run.sh:/run.sh
+    env_file:
+      - ./.env
+    ports:
+      - 8000:8000
+  
+  api_celery:
+    build: ./api
+    depends_on:
+      - api
+      - redis
+    entrypoint: "./run_celery.sh"
+    volumes:
+      - ./api/src:/src
+      - ./utils/wait-for-service.sh:/utils/wait-for-service.sh
+      - ./api/run_celery.sh:/run_celery.sh
+    env_file:
+      - ./.env
+  
+  redis:
+    image: redis:6
